@@ -182,10 +182,10 @@ int checkexist(int id){
 
 
 void loop() {
-
+ 
   
   if(digitalRead(enroll)==1){
-
+  if(!attendanceflag){/////////////start if attendance upload
   /////empty the fingerprint data base
   finger.emptyDatabase();
   //////selecting the class
@@ -268,7 +268,19 @@ void loop() {
     LCD.print("Select Mode");
    ////// break;////exit form the enrolling
   }
+  }else{
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("upload attdnce");
+     // LCD.setCursor(0,1);
+    //  LCD.print("data.");
+      delay(500);
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Select Mode");
 
+    
+  }
   
  //////////////////////////////////////////////searching
   }else if(digitalRead(search)==1){

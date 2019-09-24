@@ -12,7 +12,7 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 int a=0;//stop the loop
 int out=0;
-char server[] = "192.168.1.101";////192.168.137.1
+char server[] = "192.168.1.102";////192.168.137.1
 
 uint8_t idnum[2];///to store the data 20 id numbers;
 
@@ -650,6 +650,8 @@ int getFingerprintIDez() {
   //Serial.print(" with confidence of "); Serial.println(finger.confidence);
   return finger.fingerID; 
 }
+/////////////////////download id's form sql database
+
 
 void download(){
 
@@ -679,15 +681,16 @@ void download(){
 
   
   int i=1;///start form odd
-  int arraypos=0;
+ // int arraypos=0;
   while (client.available()) {
     
    String line = client.readStringUntil('"');
    String data=client.readStringUntil('"');
    if(i%2==0){
        
-        idnum[arraypos]=data.toInt();
-        arraypos++;///increase the array position
+        //idnum[arraypos]=data.toInt();
+        studentids[data.toInt()]=1;//////if there is a id number then set 1 
+       /// arraypos++;///increase the array position
       
     }
     i++;///increment i
@@ -722,7 +725,7 @@ void httpRequest()
     
     // send the HTTP PUT request
     client.println(F("GET /try.php HTTP/1.0"));
-    client.println(F("Host: 192.168.1.101"));
+    client.println(F("Host: 192.168.1.102"));
     client.println("Connection: close");
     client.println();
   }

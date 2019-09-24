@@ -170,6 +170,16 @@ void loop() {
   
   if(digitalRead(enroll)==1){
 
+  /////empty the fingerprint data base
+  finger.emptyDatabase();
+  //////selecting the class
+  LCD.setCursor(0,1);
+  LCD.print("Enter the class");
+
+  String classnum=keypadinputString();////get the class form the keypad
+
+  ////////////////////////////////////////////////////////
+
   ///////set the wifi connection
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
@@ -190,7 +200,7 @@ void loop() {
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Downloading ID");
-  download();
+  download();/////////////////download and store the ids
 
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
@@ -746,4 +756,27 @@ uint8_t keypadinput(){
    // Serial.println(input);
     int vbn=input.toInt();
     return vbn;
+}
+
+///////to get a string form keypad
+String keypadinputString(){
+    String input;
+    uint8_t pos=0;
+   // LCD.setCursor(0,2);            ////new added
+   // LCD.print("                ");
+    while(digitalRead(back)==0){////ok button
+    char customKey = customKeypad.getKey();
+    
+    if (customKey){
+                LCD.setCursor(pos,2);
+                
+                LCD.print(customKey);
+                pos++;
+                input+=customKey;
+               
+               }
+    }
+   // Serial.println(input);
+    ///int vbn=input.toInt();
+    return input;
 }

@@ -60,6 +60,13 @@ int number;////get the id number
 boolean enrollflag=false; ///check wether the enroll happen
 boolean attendanceflag=false; ///check wether the attendance taken
 boolean studentids[1000];///to store the ids
+boolean attendance[1000];////store the attendance
+String classnum;
+////for the storing process of fingerprint back to the senosr
+String data="_";
+uint8_t d1[128];////data packet
+uint8_t d2[128];////data packet
+
 
 void setup() {
   Serial.begin(9600);
@@ -111,6 +118,7 @@ void setup() {
    ///////////////////////////////////enroll button to change wifi back button to exit
    while(1){
        if(digitalRead(enroll)){
+        delay(500);
         ///////setting the wifi code goes here
         break;
        }else if(digitalRead(back)){
@@ -184,7 +192,7 @@ void loop() {
   LCD.setCursor(0,1);
   LCD.print("Enter the class");
 
-  String classnum=keypadinputString();////get the class form the keypad
+  classnum=keypadinputString();////get the class form the keypad
 
   ////////////////////////////////////////////////////////
 
@@ -265,20 +273,103 @@ void loop() {
  //////////////////////////////////////////////searching
   }else if(digitalRead(search)==1){
     ////searching goes here
+    if(!enrollflag){ //////////////if the enroll does not don
+    attendanceflag=true;///set the attendance flag
+    finger.emptyDatabase();////empty the data base
+    restatt();///reset the id number and attendance data
     LCD.setCursor(0,0);
-    LCD.print("Searching..");
-    while(1){
-    ////if id=100 admin////the exit
-    int admin=getFingerprintIDez();
-    if(admin==100){
+    LCD.print("Attendance");
+    LCD.setCursor(0,1);
+    LCD.print("Enter the class");
+
+    classnum=keypadinputString();////get the class form the keypad
+
+    //////download the id's for the class
+         ///////set the wifi connection
+          LCD.clear();
+          LCD.setCursor(0,0);//set the cursor
+          LCD.print("Connecting wifi");
+  
+          while ( status != WL_CONNECTED) {
+                      Serial.print("Attempting to connect to WPA SSID: ");
+                      Serial.println(ssid);
+                      // Connect to WPA/WPA2 network
+                     status = WiFi.begin(ssid, pass);
+                 }
+          LCD.clear();
+          LCD.setCursor(0,0);//set the cursor
+          LCD.print("Connected");
+          // Serial.println("You're connected to the network");
+
+           //////////////download id number form sql
+            LCD.clear();
+            LCD.setCursor(0,0);//set the cursor
+            LCD.print("Downloading ID");
+             download();/////////////////download and store the ids
+  
+             LCD.clear();
+             LCD.setCursor(0,0);//set the cursor
+             LCD.print("Completed");
+           delay(500);
+///////////////downloading id complete
+           /////check wether the select class is not null
+     if(notnull()) {  ///////////if the class is not null
+
+              LCD.clear();
+              LCD.setCursor(0,0);
+              LCD.print("Download Fdata");
+              /////////////////start downloading the fingerprints form the db and store in sensor
+              for(int i=0;i<1000;i++){
+                if(studentids[i]==1){////if the id exsits download the fingerprint
+                          downloadandstore(2);
+                           data="_";/////reset the data string for the next fingerprint
+                }
+              }
+              
+               LCD.clear();
+               LCD.setCursor(0,1);
+               LCD.print("complete");
+               delay(2000);
+               LCD.clear();
+               LCD.setCursor(0,1);
+               LCD.print("Attendance.");
+               
+
+                ////start taking attendance
+                while(!digitalRead(back)){///////until the back button press take the attendance
+                        getFingerprintIDez();delay(50);        
+                    }
+              LCD.clear();
+              LCD.setCursor(0,0);
+              LCD.print("End of marking");
+              delay(1000);
+              LCD.clear();
+              LCD.setCursor(0,0);
+              LCD.print("Select Mode");
+    }else{//////if the class is empty
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Class empty");
+      delay(1000);
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Select Mode");
-      break;
     }
-    delay(50);
-    }  
-    
+
+  
+    }else{ ////////upload should done before taking attendance
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("upload enroll");
+      LCD.setCursor(0,1);
+      LCD.print("data.");
+      delay(500);
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Select Mode");
+    }
+   ///////////////////end of search
+ /////////////////////////////////////uploading/////////////////////
     }else if(digitalRead(up)==1){
       /////code to upload the attendace
       LCD.clear();
@@ -666,6 +757,7 @@ int getFingerprintIDez() {
   LCD.print(finger.fingerID);
   LCD.setCursor(6,1);
   LCD.print("ID Found");
+  attendance[finger.fingerID]=1;/////mark the attendance
   //Serial.print("Found ID #");
   //Serial.print(finger.fingerID); 
   //Serial.print(" with confidence of "); Serial.println(finger.confidence);
@@ -814,4 +906,204 @@ boolean notnull(){
   }
   return 0;//null arary
 }
+
+//////////////reset the attendance and id number for attendance
+void restatt(){
+  for(int i=0;i<1000;i++){
+     studentids[i]=0;
+     attendance[i]=0;
+  }
+  
+}
+
+////////////reset id for enrolling
+void restenroll(){
+  for(int i=0;i<1000;i++){
+     studentids[i]=0;
+    
+  }
+  
+}
+
+
+/////////////////////////downloading and storing the fingerprint
+
+
+void downloadandstore(int idnum){
+
+ // String data="_";//////to store the fingerprint that download form the sql
+ download(idnum);/////download the fingerprint form the sql database
+
+ /////// Serial.println(data);
+  getValue(data,'_');////extract fingerprint data
+
+
+ ///////////////////////storing the data
+
+  uint8_t packet2[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  uint8_t packet5[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  int p;
+  int id = idnum;   // --> id = FlashMemory Place
+  
+  Serial.print("\n===> Write Packet");
+         
+  p = finger.uploadModel(packet2, d1, d2,packet5);
+  switch (p) {
+    case FINGERPRINT_OK:
+      Serial.println("\n Upload sucess");
+      Serial.read();
+      break;
+    case FINGERPRINT_PACKETRECIEVEERR:
+      Serial.println("Communication error");
+      return p;
+    case FINGERPRINT_BADPACKET:
+      Serial.println("Bad packet");
+      return p;      
+    default:
+  {
+  Serial.println("\n==>[SUKSES] UploadModel = ");
+      //return p;
+  }
+  }
+  
+  Serial.print("StoreModel + ID = ");Serial.print(id);
+  p = finger.storeModel(id);                  // taruh di ID = 0 pada flash memory FP
+  if (p == FINGERPRINT_OK) {
+    Serial.println(" Stored!");
+  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
+    Serial.println("Communication error");
+    return p;
+  } else if (p == FINGERPRINT_BADLOCATION) {
+    Serial.println("Could not store in that location");
+    return p;
+  } else if (p == FINGERPRINT_FLASHERR) {
+    Serial.println("Error writing to flash");
+    return p;
+  } else {
+    Serial.println("Unknown error");
+    return p;
+  }
+
+ 
+   
+
+  
+}
+
+
+
+
+String download(int num){
+ 
+ int adownfig=0;//stop the loop
+  
+  while(1){
+  if (adownfig==0) {
+    adownfig++;
+    httpRequestdown(num);
+  }
+    // Check HTTP status
+  char status[32] = {0};
+  client.readBytesUntil('\r', status, sizeof(status));
+  // It should be "HTTP/1.0 200 OK" or "HTTP/1.1 200 OK"
+  if (strcmp(status + 9, "200 OK") != 0) {
+    Serial.print(F("Unexpected response: "));
+    Serial.println(status);
+    return;
+  }
+
+  // Skip HTTP headers
+  char endOfHeaders[] = "<body>";//"\r\n\r\n";
+  if (!client.find(endOfHeaders)) {
+    Serial.println(F("Invalid response"));
+    return;
+  }
+ //  int number=0;///count the data size 256
+  String a= client.readStringUntil('_');
+ 
+  while (client.available()) {
+       data+=client.readStringUntil('_');
+       data+="_";
+     ////  Serial.println(data);////testing
+   
+   /*if(number==255){
+  
+      client.readStringUntil('"');
+      break;
+    
+    }*/
+  ///  number++;
+    
+  }  
+      
+  
+    client.stop();  
+  }
+   
+}
+
+// this method makes a HTTP connection to the server
+void httpRequestdown(int num)
+{
+  Serial.println();
+    
+  // close any connection before send a new request
+  // this will free the socket on the WiFi shield
+  client.stop();
+
+  // if there's a successful connection
+  if (client.connect(server, 80)) {
+    Serial.println("Connecting...");
+    
+    // send the HTTP PUT request
+    client.print("GET /tryjson.php?id=");
+    client.print(num);/// 
+    client.println(" HTTP/1.0");
+    client.print("Host: ");
+    client.println(server);
+    client.println("Connection: close");
+    client.println();
+  }
+  else {
+    // if you couldn't make a connection
+    Serial.println("Connection failed");
+  }
+}
+
+void getValue(String data, char separator)
+{   
+    String d="";////to store the read numbers
+    int maxIndex = data.length() - 1;
+    int j=0,p=0;
+    int index=0;
+    for (int i = 1; i <= maxIndex; i++) {
+        if(index<128){///////////////////////////for the first array
+        if (data.charAt(i) == separator) {
+            d1[index]=d.toInt();index++;
+            d="";
+        }
+        else{
+          d+=data.charAt(i);
+        }
+        }else if(index<256){/////////////////////////////////////////for the second array
+              if (data.charAt(i) == separator) {
+                      d2[index-128]=d.toInt();index++;
+                   d="";
+        }
+        else{
+          d+=data.charAt(i);
+        }
+        }
+    }
+    
+}
+
+
+
+
+
+
+
+
 

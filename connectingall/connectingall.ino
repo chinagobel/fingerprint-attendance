@@ -151,15 +151,23 @@ uint8_t readnumber(void) {////get the id number form serial
   return num;
 }
 
-int checkexist(uint8_t id){
+int checkexist(int id){
 
-  for(int i=0;i<2;i++){
+/*  for(int i=0;i<10000;i++){ ////go through the id number
     if(id==idnum[i]){
       return 1;///valid id
     }
   }
   
   return 0;///not a vali 
+  
+  */
+  if(studentids[id]==1){
+    return 1; ////if the id is available
+  }else{
+    return 0;
+  }
+
   
 }
 
@@ -201,47 +209,60 @@ void loop() {
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Downloading ID");
   download();/////////////////download and store the ids
-
+  
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Completed");
   delay(500);
+
+  /////check wether the student id array is empty
+  if(notnull()){ /////if the array contains value enroll
+         enrollflag=true;////set the flag true
+         LCD.clear();
+         LCD.setCursor(0,0);//set the cursor
+         LCD.print("Enrolling....");
   
-  LCD.clear();
-  LCD.setCursor(0,0);//set the cursor
-  LCD.print("Enrolling....");
   
+        while(1){
+              LCD.setCursor(0,1);//second row
+              LCD.print("Enter ID number");
+              id=keypadinput();
+            /////wait until valid id entered
+             while(!checkexist(id)){
+                     delay(500);
+                     LCD.setCursor(0,2);//second row
+                     LCD.print("Enter valid ID");
+                     Serial.println("Enter valid input");
+                     sid=keypadinput();
+                     id=sid.toInt();
+             }
+            LCD.clear();
+            LCD.setCursor(0,0);//set the cursor
+            LCD.print("Enrolling....");
+            LCD.setCursor(0,1);//set the cursor
+            LCD.print("ID Number");
+            LCD.setCursor(0,2);
+            LCD.print(id);
+            while (!  getFingerprintEnroll() );
   
-  while(1){
-  LCD.setCursor(0,1);//second row
-  LCD.print("Enter ID number");
-  id=keypadinput();
- // id=sid.toInt();
-   while(!checkexist(id)){
-      delay(500);
-      LCD.setCursor(0,2);//second row
-      LCD.print("Enter valid ID");
-      Serial.println("Enter valid input");
-      sid=keypadinput();
-      id=sid.toInt();
-      
-    
+              int c=pushbuttonstate();
+             if(c==1){
+              break;
+            }
+        }
+
+       }else{
+    LCD.setCursor(0,0);
+    LCD.print("Class empty");
+    delay(1000);
+    LCD.clear();
+    LCD.setCursor(0,0);
+    LCD.print("Select Mode");
+   ////// break;////exit form the enrolling
   }
-  LCD.clear();
-  LCD.setCursor(0,0);//set the cursor
-  LCD.print("Enrolling....");
-  LCD.setCursor(0,1);//set the cursor
-  LCD.print("ID Number");
-  LCD.setCursor(0,2);
-  LCD.print(id);
-  while (!  getFingerprintEnroll() );
+
   
-  int c=pushbuttonstate();
-  if(c==1){
-    break;
-  }
-  }
-  
+ //////////////////////////////////////////////searching
   }else if(digitalRead(search)==1){
     ////searching goes here
     LCD.setCursor(0,0);
@@ -783,3 +804,14 @@ String keypadinputString(){
     ///int vbn=input.toInt();
     return input;
 }
+
+////////////////////check the boolean studentids wether it has values
+boolean notnull(){
+  for(int i=0;i<1000;i++){
+    if(studentids[i]==1){
+      return 1;//////not null arrya
+    }
+  }
+  return 0;//null arary
+}
+

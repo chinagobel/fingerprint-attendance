@@ -56,6 +56,10 @@ int back=13;//go back or ok button
 String sid;///id number in string
 int number;////get the id number
 
+//////
+boolean enrollflag=false; ///check wether the enroll happen
+boolean attendanceflag=false; ///check wether the attendance taken
+boolean studentids[1000];///to store the ids
 
 void setup() {
   Serial.begin(9600);
@@ -86,9 +90,34 @@ void setup() {
   pinMode(search,INPUT);
   pinMode(up,INPUT);
   pinMode(back,INPUT);
-  
+
   
   LCD.begin(16,4);//lcd has 16 columns 4 rows 
+  LCD.clear();
+
+   //////welcome message
+   LCD.setCursor(7,1);
+   LCD.print("SAMS");
+   delay(5000);
+
+   /////////setting the wifi 
+   LCD.clear();
+   LCD.setCursor(0,0);
+   LCD.print("change wifi-(1)");
+   LCD.setCursor(0,1);
+   LCD.print("or press back");
+   
+   
+   ///////////////////////////////////enroll button to change wifi back button to exit
+   while(1){
+       if(digitalRead(enroll)){
+        ///////setting the wifi code goes here
+        break;
+       }else if(digitalRead(back)){
+        break;////go out
+       }
+    
+   }
   LCD.clear();
   LCD.setCursor(0,0);
   LCD.print("Select Mode");

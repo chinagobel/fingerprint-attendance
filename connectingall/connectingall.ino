@@ -14,7 +14,7 @@ int a=0;//stop the loop
 int out=0;
 char server[] = "192.168.1.102";////192.168.137.1
 
-uint8_t idnum[2];///to store the data 20 id numbers;
+//uint8_t idnum[2];///to store the data 20 id numbers;
 
 // Initialize the Ethernet client object
 WiFiEspClient client;
@@ -105,7 +105,7 @@ void setup() {
    //////welcome message
    LCD.setCursor(7,1);
    LCD.print("SAMS");
-   delay(5000);
+   delay(3000);
 
    /////////setting the wifi 
    LCD.clear();
@@ -483,7 +483,8 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
     client.print("&id=");
     client.print(id);
     client.println(" HTTP/1.1");
-    client.println("Host: 192.168.1.101 ");
+    client.print("Host: ");
+    client.println(server);
     client.println("Connection: close");
     client.println();
   }
@@ -850,7 +851,8 @@ void httpRequest()
     
     // send the HTTP PUT request
     client.println(F("GET /try.php HTTP/1.0"));
-    client.println(F("Host: 192.168.1.102"));
+    client.print("Host:  ");
+    client.println(server);
     client.println("Connection: close");
     client.println();
   }

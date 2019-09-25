@@ -12,7 +12,7 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 int a=0;//stop the loop
 int out=0;
-char server[] = "192.168.1.102";////192.168.137.1
+char server[] = "192.168.1.103";////192.168.137.1
 
 //uint8_t idnum[2];///to store the data 20 id numbers;
 
@@ -286,7 +286,7 @@ void loop() {
   }else if(digitalRead(search)==1){
     ////searching goes here
     if(!enrollflag){ //////////////if the enroll does not don
-    attendanceflag=true;///set the attendance flag
+    
     finger.emptyDatabase();////empty the data base
     restatt();///reset the id number and attendance data
     LCD.setCursor(0,0);
@@ -326,14 +326,14 @@ void loop() {
 ///////////////downloading id complete
            /////check wether the select class is not null
      if(notnull()) {  ///////////if the class is not null
-
+              attendanceflag=true;///set the attendance flag
               LCD.clear();
               LCD.setCursor(0,0);
               LCD.print("Download Fdata");
               /////////////////start downloading the fingerprints form the db and store in sensor
               for(int i=0;i<1000;i++){
                 if(studentids[i]==1){////if the id exsits download the fingerprint
-                          downloadandstore(2);
+                          downloadandstore(i);
                            data="_";/////reset the data string for the next fingerprint
                 }
               }
@@ -343,13 +343,13 @@ void loop() {
                LCD.print("complete");
                delay(2000);
                LCD.clear();
-               LCD.setCursor(0,1);
+               LCD.setCursor(0,0);
                LCD.print("Attendance.");
                
 
                 ////start taking attendance
                 while(!digitalRead(back)){///////until the back button press take the attendance
-                        getFingerprintIDez();delay(50);        
+                        getFingerprintIDez();delay(50);    ///getFingerprintIDez()    
                     }
               LCD.clear();
               LCD.setCursor(0,0);
@@ -397,7 +397,7 @@ void loop() {
           downloadFingerprintTemplate(finger);
           }
       }
-
+      enrollflag=false;////reset the enroll flag
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Done uploading"); 
@@ -424,7 +424,7 @@ void loop() {
                   }
           
       }
-
+      attendanceflag=false;///reset the attendance flag
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Done uploading"); 

@@ -34,7 +34,7 @@ SoftwareSerial mySerial(11, 12);
 
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-
+boolean idnumbers[1000]; 
 //String b="109_29_209_253_114_160_39_189_91_171_86_146_30_47_79_218_18_49_21_82_98_151_103_211_85_171_106_211_22_50_38_248_49_48_14_246_44_176_104_22_48_181_8_246_45_52_38_117_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_20_84_3_1_74_32_149_0_255_30_224_6_128_2_128_2_128_2_128_0_128_0_128_0_128_0_128_2_128_2_128_2_128_6_128_30_0_30_0_62_1_254_255_255_255_255_255_255_255_255_255_255_255_0_0_0_0_0_95_134_18_62_98_10_81_30_105_143_38_222_26_149_129_222_30_36_214_190_35_46_148_190_70_7_103_151_78_12_18_31_59_144_85_159_41_26_87_159_73_29_146_95_81_47_82_159_93_160_81_188_104_160_79_188_76_41_18_60_25_50_170_28_99_164_39_29_70_171_41_21_36_169_9_188_76_41_18_60_25_50_170_28_99_164_39_29_70";
 void setup()  
 {
@@ -74,11 +74,18 @@ void setup()
   // you're connected now, so print out the data
   Serial.println("You're connected to the network");
   
-   
-
-    for (int finger = 1; finger < 5; finger++) {
-          downloadFingerprintTemplate(finger);
+    /////for testing 
+    ///id=50,156  ///idnumbers[1000]
+    idnumbers[50]=1;
+    idnumbers[156]=1;
+    
+      for(int finger=1;finger<200;finger++){
+      Serial.println(finger);
+          if(idnumbers[finger]==1){
+           downloadFingerprintTemplate(finger);
+          }
   }
+  Serial.println("out of the loop");
 }
 
 
@@ -144,9 +151,17 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
       while (index < uindx) ++index;
       uindx = index + 9;
   }
+   for (int i = 0; i < 512; ++i) {
+      //Serial.print("0x");
+      printHex(fingerTemplate[i], 2);
+      //Serial.print(", ");
+  }
 
-  String abc=extractfingerdata(fingerTemplate);
+   String abc=extractfingerdata(fingerTemplate);
+  ////////////////////////////////////////String abc="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  
   Serial.println("\ndone.");
+ 
     if (client.connect(server, 80)) {
     Serial.println("Connected to server");
     // Make a HTTP request
@@ -166,6 +181,7 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
 
   
 }
+
 String extractfingerdata(uint8_t arr[]){
   String s="";///data string to send to the server
   int i=0;
@@ -191,17 +207,16 @@ String extractfingerdata(uint8_t arr[]){
   return s;
 }
 
-
-
-void senddata(int id,String fig){
-
-
-  // if you get a connection, report back via serial
-
-
-  
-  
+void printHex(int num, int precision) {
+    char tmp[16];
+    char format[128];
+ 
+    sprintf(format, "%%.%dX", precision);
+ 
+    sprintf(tmp, format, num);
+    Serial.print(tmp);
 }
+
 
 void loop()
 {}

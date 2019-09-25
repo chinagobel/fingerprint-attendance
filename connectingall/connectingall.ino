@@ -12,7 +12,7 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 int a=0;//stop the loop
 int out=0;
-char server[] = "192.168.1.103";////192.168.137.1
+char server[] = "192.168.1.102";////192.168.137.1
 
 //uint8_t idnum[2];///to store the data 20 id numbers;
 
@@ -517,6 +517,12 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
       uindx = index + 9;
   }
 
+  for (int i = 0; i < 512; ++i) {
+      //Serial.print("0x");
+      printHex(fingerTemplate[i], 2);
+      //Serial.print(", ");
+  }
+
   String abc=extractfingerdata(fingerTemplate);
   Serial.println("\ndone.");
     if (client.connect(server, 80)) {
@@ -535,7 +541,7 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
 
   Serial.println("End of sending data");
 
-  
+ 
 
   
 }
@@ -571,6 +577,15 @@ String extractfingerdata(uint8_t arr[]){
   return s;
 }
 
+void printHex(int num, int precision) {
+    char tmp[16];
+    char format[128];
+ 
+    sprintf(format, "%%.%dX", precision);
+ 
+    sprintf(tmp, format, num);
+    Serial.print(tmp);
+}
 
 
 

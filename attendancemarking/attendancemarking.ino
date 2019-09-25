@@ -85,7 +85,7 @@ void setup()
  /////////////////////upload the attendance
  for(int i=1;i<=1000;i++){
     if(attendance[i]==1){
-      httpRequest(i);
+      httpReq(i);
     }
  }
  Serial.println("End of sending data");
@@ -125,7 +125,7 @@ int getFingerprintIDez() {
 }
 
 // this method makes a HTTP connection to the server
-void httpRequest(int stid)
+void httpReq(int stid)
 {
   Serial.println();
     

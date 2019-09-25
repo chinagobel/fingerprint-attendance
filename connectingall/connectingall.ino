@@ -383,18 +383,21 @@ void loop() {
    ///////////////////end of search
  /////////////////////////////////////uploading/////////////////////
     }else if(digitalRead(up)==1){
-      /////code to upload the attendace
+
+      // enrollflag=false; ///check wether the enroll happen
+     //// attendanceflag=false;
+
+      if(enrollflag){////////////////////////////////////upload enroll
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Uploading.....");
 
-       for (int finger = 1; finger <=2; finger++) {
+       for (int finger = 1; finger <=1000; finger++) {
+          if(studentids[finger]==1){////////////////upload the fingerpirnt to database
           downloadFingerprintTemplate(finger);
+          }
       }
 
-
-
-      
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Done uploading"); 
@@ -402,6 +405,47 @@ void loop() {
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Select Mode");
+
+
+
+
+        
+        
+      }else if(attendanceflag){/////upload attendance
+
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Uploading.....");
+
+        ////////attendance
+       for (int i =1; i<1000;i++) {
+                 if(attendance[i]==1){
+                         httpReq(i);
+                  }
+          
+      }
+
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Done uploading"); 
+      delay(1000);
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("Select Mode");
+        
+        
+      }else{///////no data to upload
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("No data to upload");
+        delay(1000);
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("Select Mode");
+        
+      }
+      /////code to upload the attendace
+      
        
       }
   
@@ -1113,6 +1157,33 @@ void getValue(String data, char separator)
     
 }
 
+//////////////////////////send attendance to sql
+void httpReq(int stid)
+{
+  Serial.println();
+    
+  // close any connection before send a new request
+  // this will free the socket on the WiFi shield
+  client.stop();
+
+  // if there's a successful connection
+  if (client.connect(server, 80)) {
+    Serial.println("Connecting...");
+    
+    // send the HTTP PUT request
+    client.print("GET /att.php?id=");
+    client.print(stid); 
+    client.println(" HTTP/1.0");
+    client.print("Host: ");
+    client.println(server);
+    client.println("Connection: close");
+    client.println();
+  }
+  else {
+    // if you couldn't make a connection
+    Serial.println("Connection failed");
+  }
+}
 
 
 

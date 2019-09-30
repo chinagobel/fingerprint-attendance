@@ -12,7 +12,7 @@ int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 int a=0;//stop the loop
 int out=0;
-char server[] = "192.168.1.102";////192.168.137.1
+char server[] = "192.168.1.103";////192.168.137.1
 
 //uint8_t idnum[2];///to store the data 20 id numbers;
 
@@ -217,7 +217,7 @@ void loop() {
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Downloading ID");
   download();/////////////////download and store the ids
-  
+  a=0;/////////reset a for the next id http request
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Completed");
@@ -318,7 +318,7 @@ void loop() {
             LCD.setCursor(0,0);//set the cursor
             LCD.print("Downloading ID");
              download();/////////////////download and store the ids
-  
+             a=0;//////rest a for the next id http request
              LCD.clear();
              LCD.setCursor(0,0);//set the cursor
              LCD.print("Completed");

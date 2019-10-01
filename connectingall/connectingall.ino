@@ -191,9 +191,9 @@ void loop() {
   //////selecting the class
   LCD.setCursor(0,1);
   LCD.print("Enter the class");
-
+  restenroll();//////reset the id numbers
   classnum=keypadinputString();////get the class form the keypad
-
+   Serial.println(classnum);
   ////////////////////////////////////////////////////////
 
   ///////set the wifi connection
@@ -294,8 +294,8 @@ void loop() {
     LCD.setCursor(0,1);
     LCD.print("Enter the class");
 
-    classnum=keypadinputString();////get the class form the keypad
-
+      classnum=keypadinputString();////get the class form the keypad
+      Serial.println(classnum);
     //////download the id's for the class
          ///////set the wifi connection
           LCD.clear();
@@ -391,7 +391,7 @@ void loop() {
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Uploading.....");
-
+       Serial.println(classnum);
        for (int finger = 1; finger <=1000; finger++) {
           if(studentids[finger]==1){////////////////upload the fingerpirnt to database
           downloadFingerprintTemplate(finger);
@@ -528,7 +528,9 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
     if (client.connect(server, 80)) {
     Serial.println("Connected to server");
     // Make a HTTP request
-    client.print("GET /info.php?request=");
+    client.print("GET /info.php?class=");
+    client.print(classnum);////////////class number added
+    client.print("&request=");
     client.print(abc);////string 
     client.print("&id=");
     client.print(id);
@@ -909,7 +911,9 @@ void httpRequest()
     Serial.println("Connecting...");
     
     // send the HTTP PUT request
-    client.println(F("GET /try.php HTTP/1.0"));
+    client.print("GET /try.php?class=");
+    client.print(classnum);///////new added class number
+    client.println(" HTTP/1.0");
     client.print("Host:  ");
     client.println(server);
     client.println("Connection: close");
@@ -1130,7 +1134,9 @@ void httpRequestdown(int num)
     Serial.println("Connecting...");
     
     // send the HTTP PUT request
-    client.print("GET /tryjson.php?id=");
+    client.print("GET /tryjson.php?class=");
+    client.print(classnum);/////newly added class
+    client.print("&id=");
     client.print(num);/// 
     client.println(" HTTP/1.0");
     client.print("Host: ");

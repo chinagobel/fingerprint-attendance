@@ -119,7 +119,22 @@ void setup() {
    while(1){
        if(digitalRead(enroll)){
         delay(500);
-        ///////setting the wifi code goes here
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("Wifi Settings");
+        LCD.setCursor(0,1);
+        LCD.print("SSID");
+        String nt=wifiString();
+        delay(500);
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("Wifi Settings");
+        LCD.setCursor(0,1);
+        LCD.print("PASSWORD");
+        delay(500);
+        String ps=wifiString();
+        ////PASSOWRD=readformthekeypad
+     
         break;
        }else if(digitalRead(back)){
         break;////go out
@@ -1207,7 +1222,34 @@ void httpReq(int stid)
 }
 
 
-
+//////wifi setting form keypad
+String wifiString(){
+    String input;
+    uint8_t pos=0;
+   // LCD.setCursor(0,2);            ////new added
+   // LCD.print("                ");
+    while(digitalRead(back)==0){////ok button
+    char customKey = customKeypad.getKey();
+    
+    if (customKey){
+                LCD.setCursor(pos,2);
+                
+                LCD.print(customKey);
+                pos++;
+                input+=customKey;
+               
+               }
+     if(digitalRead(up)==1&pos>0){//////delete go back the string
+              delay(500);
+              pos--;///go back the string
+              LCD.setCursor(pos,2);
+              LCD.print(' ');
+              input.remove(pos);
+     }
+    }
+   
+    return input;
+}
 
 
 

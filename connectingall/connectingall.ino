@@ -3,16 +3,16 @@
 #include "WiFiEsp.h"
 #include <ArduinoJson.h>
 #include <Adafruit_Fingerprint.h>
-
+#include <EEPROM.h>
 #include <Keypad.h>
 
-char ssid[] = "SLT-4G-B11A";            // your network SSID (name)
-char pass[] = "GBJEMDT0700";        // your network password
+String ssid;            // your network SSID (name)
+String pass;        // your network password
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 int a=0;//stop the loop
 int out=0;
-char server[] = "192.168.1.103";////192.168.137.1
+char server[] = "192.168.43.132";////192.168.137.1
 
 //uint8_t idnum[2];///to store the data 20 id numbers;
 
@@ -66,9 +66,14 @@ String classnum;
 String data="_";
 uint8_t d1[128];////data packet
 uint8_t d2[128];////data packet
-
+String password;/////password for the device
 
 void setup() {
+
+
+
+
+  
   Serial.begin(9600);
   while (!Serial);  // For Yun/Leo/Micro/Zero/...
   delay(100);
@@ -102,11 +107,40 @@ void setup() {
   LCD.begin(16,4);//lcd has 16 columns 4 rows 
   LCD.clear();
 
-   //////welcome message
+  //////welcome message
    LCD.setCursor(7,1);
    LCD.print("SAMS");
    delay(3000);
 
+///////////////////////password //////////////////////////////////
+  int value=EEPROM.read(0);////read the value and check password set
+  if(value==0){//////passowrd not set
+    LCD.clear();
+    LCD.setCursor(0,0);
+    LCD.print("Set password");
+    password=wifiString();///get the password form the keypad
+    //////write the password to the eeprom
+    writeeeprom(password,0);//////0 for the password
+    
+  }else{/////ask for the password
+     LCD.clear();
+     LCD.setCursor(0,0);
+     LCD.print("Password");
+     password=readeeprom(0);///read the password form the eeprom and set the password
+     
+     while(1){//////wait until correct password
+      String re=wifiString();  /////read the password form the eeprom and set
+       if(password==re){
+                 break;
+                 
+          }
+          LCD.setCursor(0,2);
+          LCD.print("Incorrect");
+          delay(500);
+     }
+    
+  }
+   delay(500);
    /////////setting the wifi 
    LCD.clear();
    LCD.setCursor(0,0);
@@ -114,17 +148,18 @@ void setup() {
    LCD.setCursor(0,1);
    LCD.print("or press back");
    
-   
+   int wifival=EEPROM.read(20);////read the value and check go to wifi settings
    ///////////////////////////////////enroll button to change wifi back button to exit
    while(1){
-       if(digitalRead(enroll)){
+       if(digitalRead(enroll)|wifival==0){
         delay(500);
         LCD.clear();
         LCD.setCursor(0,0);
         LCD.print("Wifi Settings");
         LCD.setCursor(0,1);
         LCD.print("SSID");
-        String nt=wifiString();
+        ssid=wifiString();////set the new ssid
+        writeeeprom(ssid,20);//////save new ssid in the eeprom
         delay(500);
         LCD.clear();
         LCD.setCursor(0,0);
@@ -132,11 +167,15 @@ void setup() {
         LCD.setCursor(0,1);
         LCD.print("PASSWORD");
         delay(500);
-        String ps=wifiString();
-        ////PASSOWRD=readformthekeypad
+        pass=wifiString();////get the new password of the wifi
+        writeeeprom(pass,40);//////save new wifi password in the eeprom
      
         break;
        }else if(digitalRead(back)){
+        /////read the previous wifi password and ssid form the eeprom
+        ssid=readeeprom(20);////set the ssid
+        pass=readeeprom(40);///set the password
+        Serial.println(pass);
         break;////go out
        }
     
@@ -207,7 +246,7 @@ void loop() {
   LCD.setCursor(0,1);
   LCD.print("Enter the class");
   restenroll();//////reset the id numbers
-  classnum=keypadinputString();////get the class form the keypad
+  classnum=wifiString();////////keypadinputString();////get the class form the keypadw
    Serial.println(classnum);
   ////////////////////////////////////////////////////////
 
@@ -220,7 +259,7 @@ void loop() {
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(ssid);
     // Connect to WPA/WPA2 network
-    status = WiFi.begin(ssid, pass);
+    status = WiFi.begin(ssid.c_str(),pass.c_str());
   }
   LCD.clear();
   LCD.setCursor(0,0);//set the cursor
@@ -237,7 +276,7 @@ void loop() {
   LCD.setCursor(0,0);//set the cursor
   LCD.print("Completed");
   delay(500);
-
+  status=WiFi.disconnect();//////disconnect form the wifi 
   /////check wether the student id array is empty
   if(notnull()){ /////if the array contains value enroll
          enrollflag=true;////set the flag true
@@ -300,7 +339,7 @@ void loop() {
  //////////////////////////////////////////////searching
   }else if(digitalRead(search)==1){
     ////searching goes here
-    if(!enrollflag){ //////////////if the enroll does not don
+    if(!enrollflag&!attendanceflag){ //////////////if the enroll does not done or attendance not taken
     
     finger.emptyDatabase();////empty the data base
     restatt();///reset the id number and attendance data
@@ -309,7 +348,7 @@ void loop() {
     LCD.setCursor(0,1);
     LCD.print("Enter the class");
 
-      classnum=keypadinputString();////get the class form the keypad
+      classnum=wifiString();/////keypadinputString();////get the class form the keypad
       Serial.println(classnum);
     //////download the id's for the class
          ///////set the wifi connection
@@ -321,7 +360,7 @@ void loop() {
                       Serial.print("Attempting to connect to WPA SSID: ");
                       Serial.println(ssid);
                       // Connect to WPA/WPA2 network
-                     status = WiFi.begin(ssid, pass);
+                     status = WiFi.begin(ssid.c_str(), pass.c_str());
                  }
           LCD.clear();
           LCD.setCursor(0,0);//set the cursor
@@ -360,7 +399,7 @@ void loop() {
                LCD.clear();
                LCD.setCursor(0,0);
                LCD.print("Attendance.");
-               
+               status=WiFi.disconnect();//////disconnect form the wifi
 
                 ////start taking attendance
                 while(!digitalRead(back)){///////until the back button press take the attendance
@@ -374,6 +413,7 @@ void loop() {
               LCD.setCursor(0,0);
               LCD.print("Select Mode");
     }else{//////if the class is empty
+      status=WiFi.disconnect();//////disconnect form the wifi
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Class empty");
@@ -401,6 +441,63 @@ void loop() {
 
       // enrollflag=false; ///check wether the enroll happen
      //// attendanceflag=false;
+     ////////ask for the wifi if need to be change
+      LCD.clear();
+      LCD.setCursor(0,0);
+      LCD.print("change wifi-(1)");
+      LCD.setCursor(0,1);
+      LCD.print("or press back");
+
+        while(1){
+       if(digitalRead(enroll)){
+        delay(500);
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("Wifi Settings");
+        LCD.setCursor(0,1);
+        LCD.print("SSID");
+        ssid=wifiString();////set the new ssid
+        writeeeprom(ssid,20);//////save new ssid in the eeprom
+        delay(500);
+        LCD.clear();
+        LCD.setCursor(0,0);
+        LCD.print("Wifi Settings");
+        LCD.setCursor(0,1);
+        LCD.print("PASSWORD");
+        delay(500);
+        pass=wifiString();////get the new password of the wifi
+        writeeeprom(pass,40);//////save new wifi password in the eeprom
+     
+        break;
+       }else if(digitalRead(back)){
+        /////read the previous wifi password and ssid form the eeprom
+        ssid=readeeprom(20);////set the ssid
+        pass=readeeprom(40);///set the password
+        break;////go out
+       }
+    
+   }
+
+      
+     
+
+      ////connect wifi here
+      LCD.clear();
+      LCD.setCursor(0,0);//set the cursor
+      LCD.print("Connecting wifi");
+  
+     while ( status != WL_CONNECTED) {
+               Serial.print("Attempting to connect to WPA SSID: ");
+               Serial.println(ssid);
+    // Connect to WPA/WPA2 network
+    status = WiFi.begin(ssid.c_str(),pass.c_str());
+         }
+         LCD.clear();
+         LCD.setCursor(0,0);//set the cursor
+         LCD.print("Connected");
+
+
+     
 
       if(enrollflag){////////////////////////////////////upload enroll
       LCD.clear();
@@ -417,6 +514,7 @@ void loop() {
       LCD.setCursor(0,0);
       LCD.print("Done uploading"); 
       delay(1000);
+      status=WiFi.disconnect();//////disconnect form the wifi
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Select Mode");
@@ -444,12 +542,14 @@ void loop() {
       LCD.setCursor(0,0);
       LCD.print("Done uploading"); 
       delay(1000);
+      status=WiFi.disconnect();//////disconnect form the wifi
       LCD.clear();
       LCD.setCursor(0,0);
       LCD.print("Select Mode");
         
         
       }else{///////no data to upload
+        status=WiFi.disconnect();//////disconnect form the wifi
         LCD.clear();
         LCD.setCursor(0,0);
         LCD.print("No data to upload");
@@ -947,9 +1047,10 @@ void httpRequest()
 uint8_t keypadinput(){
     String input;
     uint8_t pos=0;
-   // LCD.setCursor(0,2);            ////new added
-   // LCD.print("                ");
-    while(digitalRead(back)==0){////ok button
+    delay(700);
+    LCD.setCursor(0,2);            ////new added
+    LCD.print("                ");
+    while(digitalRead(back)==0|pos==0){////ok button
     char customKey = customKeypad.getKey();
     
     if (customKey){
@@ -972,7 +1073,7 @@ String keypadinputString(){
     uint8_t pos=0;
    // LCD.setCursor(0,2);            ////new added
    // LCD.print("                ");
-    while(digitalRead(back)==0){////ok button
+    while(digitalRead(back)==0|pos==0){////ok button  
     char customKey = customKeypad.getKey();
     
     if (customKey){
@@ -1226,9 +1327,9 @@ void httpReq(int stid)
 String wifiString(){
     String input;
     uint8_t pos=0;
-   // LCD.setCursor(0,2);            ////new added
-   // LCD.print("                ");
-    while(digitalRead(back)==0){////ok button
+    LCD.setCursor(0,2);            ////new added
+    LCD.print("                ");
+    while(digitalRead(back)==0|pos==0){////ok button
     char customKey = customKeypad.getKey();
     
     if (customKey){
@@ -1249,6 +1350,36 @@ String wifiString(){
     }
    
     return input;
+}
+
+
+
+void writeeeprom(String password,int addr){
+  int val=password.length();
+  EEPROM.write(addr, val);
+  int en=addr+val;
+  int i=0;
+  addr+=1;
+  /////write the password to eeprom
+  for(addr;addr<=en;addr++){
+  
+    EEPROM.write(addr, password[i]);
+    i++;
+  }
+  
+}
+
+String readeeprom(int addr){
+  int len=EEPROM.read(addr);
+  int en=addr+len;
+  addr+=1;
+  String pass;
+  unsigned char n;
+  for(addr;addr<=en;addr++){
+    n=EEPROM.read(addr);
+    pass+=char(n);
+  }
+  return pass;
 }
 
 
